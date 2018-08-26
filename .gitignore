@@ -1,4 +1,5 @@
 /data-analysis
+/output
 raw-output.csv
 client-stuff.txt
-/output
+test.py
