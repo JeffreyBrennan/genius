@@ -1,14 +1,22 @@
 import requests, csv, time, timing, json
 from bs4 import BeautifulSoup
-## test git username update
+
 ## create genius link / test w/ genius website 
 ## classify genre 
 # output to table / include source (genius hot 100 / billboard) etc
 
-artistList, titleList, lastWeekList, peakList, weeksList =([] for i in range(5))
+datesList = []
 
-def getTopSong(url):
-    r = requests.get('https://www.billboard.com/charts/'+url)
+with open('datelist.csv', newline='') as r:
+        file = csv.reader(r, delimiter =',')
+        for row in file:
+            for i in row:
+                datesList.append(i)
+
+
+
+def getTopSong(baseUrl, date):
+    r = requests.get('https://www.billboard.com/charts/'+baseUrl+'/'+date)
     s = BeautifulSoup(r.text, 'html.parser')
 
     topSong = s.find('div', class_='chart-number-one__info')
@@ -28,8 +36,8 @@ def getTopSong(url):
     peakList.append(1)
     weeksList.append(weeks.text)
 
-def getSongData(url):
-    r = requests.get('https://www.billboard.com/charts/'+url)
+def getSongData(baseUrl, date):
+    r = requests.get('https://www.billboard.com/charts/'+baseUrl+'/'+date)
     s = BeautifulSoup(r.text, 'html.parser')
 
     songs = s.findAll('div',class_='chart-list-item')
@@ -55,8 +63,8 @@ def getSongData(url):
                 for weeks in item(class_='chart-list-item__weeks-on-chart'):
                     weeksList.append(weeks.text)
     
-def getDate(url):
-    r = requests.get('https://www.billboard.com/charts/'+url)
+def getDate(baseUrl, date):
+    r = requests.get('https://www.billboard.com/charts/'+baseUrl+'/'+date)
     s = BeautifulSoup(r.text, 'html.parser')
 
     lastWeek = s.find('li', class_='dropdown__date-selector-option')
@@ -73,41 +81,44 @@ def infoChoice (choice):
         path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/ \
                 genius/output/billboard-songs/'
 
-        getDate(charts[0])
-        getTopSong(charts[0])
-        getSongData(charts[0])
+        for i in datesList:
+            getDate(charts[0], i)
+            getTopSong(charts[0], i)
+            getSongData(charts[0], i)
 
-        dateCorrection = str(int(getDate.info[-1])+7)
-        date = (getDate.info[16:-1] + dateCorrection)
-        
-        artistList = [i.strip() for i in artistList]
-        titleList = [i.strip() for i in titleList]
+            dateCorrection = str(int(getDate.info[-1])+7)
+            date = (getDate.info[16:-1] + dateCorrection)
+            
+            artistList = [x.strip() for x in artistList]
+            titleList = [x.strip() for x in titleList]
 
+            print (str(i) + '/' + len(datesList))
 
-        with open(path + date + '-billboard-100-songs.csv','w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerows(zip(['Rank'], ['Week'], ['Artist'], ['Song Title'], \
-                            ['Last_Week'], ['Peak_Position'], ['Chart_Weeks']))
+            with open(path + date + '-billboard-100-songs.csv','a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerows(zip(['Rank'], ['Week'], ['Artist'], ['Song Title'], \
+                                ['Last_Week'], ['Peak_Position'], ['Chart_Weeks']))
 
-            writer.writerows(zip((i + 1 for i in range(99)),
-                            (date for i in range(100)),
-                            artistList, 
-                            titleList,
-                            lastWeekList,
-                            peakList,
-                            weeksList))
+                writer.writerows(zip((i + 1 for i in range(99)),
+                                (date for i in range(100)),
+                                artistList, 
+                                titleList,
+                                lastWeekList,
+                                peakList,
+                                weeksList))
 
 
     elif choice == 2:
         path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/ \
                 genius/output/billboard-albums/'
 
-        getDate(charts[1])
-        getTopSong(charts[1])
-        getSongData(charts[1])
+        for i in datesList:
+            # getDate(charts[1], i)
+            getTopSong(charts[1], i)
+            getSongData(charts[1], i)
 
-        dateCorrection = str(int(getDate.info[-1])+7)
-        date = (getDate.info[22:-1] + dateCorrection)
+        # dateCorrection = str(int(getDate.info[-1])+7)
+        # date = (getDate.info[22:-1] + dateCorrection)
 
         artistList = [i.strip() for i in artistList]
         titleList = [i.strip() for i in titleList]
@@ -132,5 +143,33 @@ def infoChoice (choice):
 ### 1: Get song data
 ### 2: Get album data
 ###
-infoChoice(2)
+# infoChoice(1)
 ###
+
+path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/genius/output/billboard-songs/'
+
+for date in datesList:
+    artistList, titleList, lastWeekList, peakList, weeksList =([] for i in range(5))
+    getTopSong('hot-100', date)
+    getSongData('hot-100', date)
+
+    # dateCorrection = str(int(getDate.info[-1])+7)
+    # date = (getDate.info[16:-1] + dateCorrection)
+
+    artistList = [x.strip() for x in artistList]
+    titleList = [x.strip() for x in titleList]
+
+    print (date)
+
+    with open(path + 'all-billboard-100-songs.csv','a', newline='') as f:
+        writer = csv.writer(f)
+        # writer.writerows(zip(['Rank'], ['Week'], ['Artist'], ['Song Title'], \
+        #                 ['Last_Week'], ['Peak_Position'], ['Chart_Weeks']))
+
+        writer.writerows(zip((i for i in range(1,101)),
+                        (date for i in range(100)),
+                        artistList, 
+                        titleList,
+                        lastWeekList,
+                        peakList,
+                        weeksList))

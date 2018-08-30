@@ -1,5 +1,6 @@
 /data-analysis
 /output
-raw-output.csv
 client-stuff.txt
 test.py
+runtimes.txt
+*.csv
