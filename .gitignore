@@ -1,6 +1,6 @@
 /data-analysis
 /output
-client-stuff.txt
+/az-lyrics failure
+*.txt
 test.py
-runtimes.txt
 *.csv
