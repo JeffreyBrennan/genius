@@ -79,7 +79,7 @@ def infoChoice (choice):
     
     if choice == 1:
         path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/ \
-                genius/output/billboard-songs/'
+                lyrics/output/billboard-songs/'
 
         for i in datesList:
             getDate(charts[0], i)
@@ -110,7 +110,7 @@ def infoChoice (choice):
 
     elif choice == 2:
         path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/ \
-                genius/output/billboard-albums/'
+                lyrics/output/billboard-albums/'
 
         for i in datesList:
             # getDate(charts[1], i)
