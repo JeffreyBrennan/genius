@@ -3,21 +3,39 @@ import csv
 import time
 import timing
 import json
+import datetime
 from bs4 import BeautifulSoup
 import pandas as pd
 # create genius link / test w/ genius website
 # classify genre
 # output to table / include source (genius hot 100 / billboard) etc
 
-datesList = []
+def date_gen(start, end, day):
+    dates_list = []
 
-# with open('datelist.csv', newline='') as r:
-#         file = csv.reader(r, delimiter =',')
-#         for row in file:
-#             for i in row:
-#                 datesList.append(i)
+    if day == 'Monday':
+        start_date = datetime.datetime.strptime(start, '%Y-%m-%d').date()
+        end_date = datetime.datetime.strptime(end, '%Y-%m-%d').date()
 
-datesList = pd.read_csv('datelist.csv', squeeze=True).tolist()
+        start_mod = 1
+
+    elif day == 'Saturday':
+        date_now = datetime.datetime.now()
+
+        start_date = datetime.datetime.strptime(start, '%Y-%m-%d').date()
+        end_date = (date_now + datetime.timedelta(days=(5 - date_now.weekday()))).date()
+
+        start_mod = 0
+
+    delta = end_date - start_date
+    weekCount = delta.days // 7
+
+    for i in range(start_mod, weekCount + start_mod):
+        dayint = i * 7
+        week = (end_date - datetime.timedelta(days=dayint)).strftime('%Y-%m-%d')
+        dates_list.append(week)
+    return dates_list
+
 
 def getTopSong(baseUrl, date):
     r = requests.get('https://www.billboard.com/charts/' + baseUrl + '/' + date)
@@ -85,7 +103,7 @@ def infoChoice(choice):
         path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/ \
                 lyrics/output/billboard-songs/'
 
-        for i in datesList:
+        for i in dates_list:
             getDate(charts[0], i)
             getTopSong(charts[0], i)
             getSongData(charts[0], i)
@@ -96,7 +114,7 @@ def infoChoice(choice):
             artistList = [x.strip() for x in artistList]
             titleList = [x.strip() for x in titleList]
 
-            print(str(i) + '/' + len(datesList))
+            print(str(i) + '/' + len(dates_list))
 
             with open(path + date + '-billboard-100-songs.csv', 'a', newline='') as f:
                 writer = csv.writer(f)
@@ -115,7 +133,7 @@ def infoChoice(choice):
         path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/ \
                 lyrics/output/billboard-albums/'
 
-        for i in datesList:
+        for i in dates_list:
             # getDate(charts[1], i)
             getTopSong(charts[1], i)
             getSongData(charts[1], i)
@@ -150,7 +168,16 @@ def infoChoice(choice):
 
 path = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/genius/output/billboard-songs/'
 
-for date in datesList:
+# Billboard began using Saturdays as start of the week on 12-25-1961
+saturday_list = date_gen('1961-12-25', None, 'Saturday')
+monday_list = date_gen('1958-08-04', '1961-12-25', 'Monday')
+dates_list = [item for sublist in [saturday_list + monday_list] for item in sublist]
+
+output = pd.Series(dates_list)
+output.to_csv('datelist.csv', index=False)
+
+
+for date in dates_list:
     artistList, titleList, lastWeekList, peakList, weeksList = ([] for i in range(5))
     getTopSong('hot-100', date)
     getSongData('hot-100', date)
