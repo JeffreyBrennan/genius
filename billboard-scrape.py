@@ -86,19 +86,20 @@ output.to_csv('datelist.csv', index=False)
 df = pd.DataFrame(columns=['Rank', 'Date', 'Artist', 'Title', 'Last Week',
                            'Peak Rank', 'Weeks on Chart'])
 
-for date in dates_list:
+for date in dates_list[0:1088]:
     artist_list, title_list, last_week_list, peak_list, weeks_list = ([] for i in range(5))
 
     top_song_data('hot-100', date)
     chart_song_data('hot-100', date)
-    print(date)
+    print(str(date) + '|' + str(dates_list.index(date)))
 
     df['Rank'] = [i for i in range(1, 101)]
     df['Date'] = [date for i in range(100)]
     df['Artist'] = artist_list
     df['Title'] = title_list
+    df['Combined'] = df['Artist'] + ' ' + df['Title']
     df['Last Week'] = last_week_list
     df['Peak Rank'] = peak_list
     df['Weeks on Chart'] = weeks_list
 
-    df.to_csv('billboard-songs-3.csv', mode='a', header=False, index=False)
+    df.to_csv('billboard-songs.csv', mode='a', header=False, index=False)
