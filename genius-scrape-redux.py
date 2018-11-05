@@ -1,4 +1,9 @@
-import requests, time, timing, json, pandas, csv
+import requests
+import time
+import timing
+import json
+import pandas as pd
+import csv
 from bs4 import BeautifulSoup
 
 geniusidlist = []

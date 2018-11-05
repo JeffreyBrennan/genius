@@ -1,4 +1,7 @@
-import requests, csv, time, timing, json, os
+import requests
+import csv
+import time
+import timing
 import lyricsgenius as genius
 import pandas as pd
 
@@ -15,11 +18,13 @@ API_KEY = keyGet.read()
 api = genius.Genius(API_KEY)
 
 
-with open(linkpath, newline='') as r:
-        file = csv.reader(r, delimiter =',')
-        for row in file:
-            for i in row:
-                searchList.append(i)
+# with open(linkpath, newline='') as r:
+#         file = csv.reader(r, delimiter=',')
+#         for row in file:
+#             for i in row:
+#                 searchList.append(i)
+
+pd.read_csv(linkpath)
 
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
