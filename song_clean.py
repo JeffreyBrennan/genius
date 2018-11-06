@@ -23,9 +23,8 @@ def censor_replace(title, censor_dict):
 
     return title
 
-def title_cleaning(song, artist):
-
-    # Song title fixes
+def title_cleaner(song):
+    # ----------Song title fixes---------- #
     song = song.lower()
 
     # removes characters between parentheses | removes info after slash
@@ -40,21 +39,29 @@ def title_cleaning(song, artist):
     expletives = pd.read_csv('expletives.csv', index_col='censored').to_dict()['uncensored']
     song = censor_replace(song, expletives)
 
-    # ------------ #
-    # Artist fixes #
+    return song
+
+def artist_cleaner(artist):
     artist = artist.lower()
 
     # removes featured artists for cleaner search string
     features = ['Featuring', 'featuring', '&', ',', 'feat', 'feat.', 'Feat.']
+    
     if any(substring in artist for substring in features):
         bool_results = [s in artist for s in features]
         sub_loc = (list(compress(range(len(bool_results)), bool_results)))
         sub = features[sub_loc[0]]
         artist = artist.split(sub, 1)[0]
 
-    # search_list.append(clean_title + ' ' + clean_artist)
-    # return search_list
+    return artist
 
+def search_clean(song, artist):
+    # Calls separate title and artist functions to clean the resulting search term
+    clean_title = title_cleaner(song)
+    clean_artist = artist_cleaner(artist)
+
+    search_list.append(clean_title + ' ' + clean_artist)
+    
 def str_compare(song, link):
     ratio = difflib.SequenceMatcher(None, song, link).ratio()
     ratiolist.append(ratio)
@@ -71,6 +78,6 @@ df = pd.read_csv('billboard-songs.csv', encoding='ISO-8859-1', low_memory=False)
 df_unique = unique_get(df)
 
 for i in range(len(df_unique)):
-    title_cleaning(df_unique['Title'][i], df_unique['Artist'][i])
+    search_clean(df_unique['Title'][i], df_unique['Artist'][i])
 
 # df_unique['Search term'] = search_list
