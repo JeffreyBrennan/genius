@@ -5,19 +5,19 @@ import re
 from itertools import compress
 
 ratiolist = []
-songlist = []
-linklist = []
 search_list = []
 
 def unique_get(df):
-    # Creates combined column (assuming it does not exist and removes duplicate values)
-    # df['Combined'] = df['Artist'] + ' ' + df['Title']
-    df = df.drop_duplicates(subset='Combined')
+    df.drop_duplicates(subset='Combined', inplace=True)
+    df.index.names = ['chart-id']
+    df = df.reset_index()
+    df.index.names = ['unique-id']
+
     df.to_csv('unique-billboard-songs.csv')
     return df
 
 def censor_replace(title, censor_dict):
-    for item in dict.keys():
+    for item in censor_dict.keys():
         if item in title:
             title = title.replace(item, censor_dict[item])
 
@@ -39,19 +39,22 @@ def title_cleaner(song):
     expletives = pd.read_csv('expletives.csv', index_col='censored').to_dict()['uncensored']
     song = censor_replace(song, expletives)
 
+    song = song.strip()
+
     return song
 
 def artist_cleaner(artist):
     artist = artist.lower()
 
     # removes featured artists for cleaner search string
-    features = ['Featuring', 'featuring', '&', ',', 'feat', 'feat.', 'Feat.']
-    
+    features = ['featuring', '&', ',', 'feat', 'feat.']
+
     if any(substring in artist for substring in features):
         bool_results = [s in artist for s in features]
         sub_loc = (list(compress(range(len(bool_results)), bool_results)))
         sub = features[sub_loc[0]]
         artist = artist.split(sub, 1)[0]
+    artist = artist.strip()
 
     return artist
 
@@ -60,24 +63,31 @@ def search_clean(song, artist):
     clean_title = title_cleaner(song)
     clean_artist = artist_cleaner(artist)
 
-    search_list.append(clean_title + ' ' + clean_artist)
-    
+    search_list.append(clean_artist + ' ' + clean_title)
+
 def str_compare(song, link):
     ratio = difflib.SequenceMatcher(None, song, link).ratio()
     ratiolist.append(ratio)
     print(len(ratiolist))
 
-# for i in range(len(df)):
-#     strcompare(df['song'][i], df['split-link'][i])
+def search_analysis():
+    df = pd.read_csv('genius-results')
+    for i in range(len(df)):
+        str_compare(df['song'][i], df['split-link'][i])
 
-# df['ratio'] = ratiolist
+    df['ratio'] = ratiolist
 
-# df.to_csv('genius-link-ratio-2.csv', encoding='ISO-8859-1')
+    df.to_csv('genius-link-ratio-2.csv', encoding='ISO-8859-1')
 
-df = pd.read_csv('billboard-songs.csv', encoding='ISO-8859-1', low_memory=False)
-df_unique = unique_get(df)
+def initial_clean():
+    df = pd.read_csv('billboard-songs.csv', encoding='ISO-8859-1', low_memory=False)
+    df_unique = unique_get(df)
 
-for i in range(len(df_unique)):
-    search_clean(df_unique['Title'][i], df_unique['Artist'][i])
+    for i in range(len(df_unique)):
+        search_clean(df_unique['Title'][i], df_unique['Artist'][i])
+        print(i)
+    df_unique['Search term'] = search_list
 
-# df_unique['Search term'] = search_list
+    df_unique.to_csv('genius-search-terms.csv')
+
+initial_clean()
