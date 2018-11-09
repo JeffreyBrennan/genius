@@ -22,7 +22,7 @@ def chunker(seq, size):
 def link_get(query):
     try:
         data = api.search_genius(query)
-        song_id.append(int(data['hits'][0]['result']['id']))
+        song_id.append(data['hits'][0]['result']['id'])
         genius_link.append(data['hits'][0]['result']['path'])
 
     except IndexError:
