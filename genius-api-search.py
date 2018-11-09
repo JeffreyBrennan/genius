@@ -10,48 +10,42 @@ songid = []
 geniuslink = []
 geniusidlist = []
 
-linkpath = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/lyrics/linkmatch-cleanup.csv'
-lyricpath = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/lyrics/genius-lyric-search.csv'
+input_path = r'csv-files\genius-search-terms.csv'
 
 keyGet = open('Key.txt', 'r')
 API_KEY = keyGet.read()
 api = genius.Genius(API_KEY)
 
-
-# with open(linkpath, newline='') as r:
-#         file = csv.reader(r, delimiter=',')
-#         for row in file:
-#             for i in row:
-#                 searchList.append(i)
-
-pd.read_csv(linkpath)
-
 def chunker(seq, size):
     return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
-def linkget(query):
-
+def link_get(query):
     try:
         data = api.search_genius(query)
-        songid.append(data['hits'][0]['result']['id'])
-        geniuslink.append(data['hits'][0]['result']['path'])
+        song_id.append(int(data['hits'][0]['result']['id']))
+        genius_link.append(data['hits'][0]['result']['path'])
 
-    except:
-        songid.append('N/A')
-        geniuslink.append('N/A')
+    except IndexError:
+        song_id.append('N/A')
+        genius_link.append('N/A')
 
+search_df = pd.read_csv(input_path)
+search_list = search_df['Search term']
 
 counter = 0
-for chunk in chunker(searchList, 100):
-    
-    songid = []
-    geniuslink = []
+output_df = pd.DataFrame(columns=['genius-id', 'genius-link'])
+output_df.to_csv('genius-results.csv', mode='a', index=False)
+
+for chunk in chunker(search_list, 10):
+    song_id = []
+    genius_link = []
 
     for song in chunk:
-            linkget(song)
-            counter +=1
-            print (str(counter) + '|' + str(song))
+        link_get(song)
+        counter += 1
+        print(str(counter) + '|' + str(song))
 
-    with open('genius-searchlist-links-2.csv','a', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerows(zip(songid, geniuslink))
+    output_df['genius-id'] = song_id
+    output_df['genius-link'] = genius_link
+
+    output_df.to_csv('genius-results.csv', mode='a', header=False, index=False)
