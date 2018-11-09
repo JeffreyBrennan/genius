@@ -4,8 +4,9 @@ import pandas as pd
 import re
 from itertools import compress
 
-ratiolist = []
+ratio_list = []
 search_list = []
+clean_links = []
 
 def unique_get(df):
     df.drop_duplicates(subset='Combined', inplace=True)
@@ -67,19 +68,24 @@ def search_clean(song, artist):
 
 def str_compare(song, link):
     ratio = difflib.SequenceMatcher(None, song, link).ratio()
-    ratiolist.append(ratio)
-    print(len(ratiolist))
+    ratio_list.append(ratio)
+    print(len(ratio_list))
 
 def search_analysis():
-    df = pd.read_csv('genius-results')
-    for i in range(len(df)):
-        str_compare(df['song'][i], df['split-link'][i])
+    link_df = pd.read_csv('cleaned-links.csv')
+    song_df = pd.read_csv('csv-files/genius-search-terms.csv')
 
-    df['ratio'] = ratiolist
+    # analysis_df = link_df + song_df
+    analysis_df = pd.merge(song_df, link_df[['genius-id', 'link']], on='unique-id')
 
-    df.to_csv('genius-link-ratio-2.csv', encoding='ISO-8859-1')
+    for i in range(len(analysis_df)):
+        str_compare(analysis_df['Search term'][i], analysis_df['Link'][i])
 
-def initial_clean():
+    analysis_df['ratio'] = ratio_list
+
+    analysis_df.to_csv('genius-link-ratio', encoding='ISO-8859-1')
+
+def song_clean():
     df = pd.read_csv('billboard-songs.csv', encoding='ISO-8859-1', low_memory=False)
     df_unique = unique_get(df)
 
@@ -90,4 +96,21 @@ def initial_clean():
 
     df_unique.to_csv('genius-search-terms.csv')
 
-initial_clean()
+def genius_cleaner(link):
+    link = link.lower()
+
+    link = link.replace('-', ' ').replace('lyrics', '')
+
+    clean_links.append(link)
+
+def link_clean():
+    link_df = pd.read_csv('genius-results.csv', encoding='ISO-8859-1', low_memory=False)
+
+    for i in range(len(link_df)):
+        genius_cleaner(link_df['Link'])
+
+    link_df.to_csv('cleaned_links.csv')
+
+# song_clean()
+link_clean()
+# search_analysis()
