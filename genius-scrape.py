@@ -1,61 +1,48 @@
-import requests, time, timing, json, pandas
+import requests
+import time
+import timing
+import json
+import pandas as pd
+import csv
 from bs4 import BeautifulSoup
 
-months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', \
-        'August', 'September', 'October', 'November', 'December']
+link_path = ('genius-link-ratio.csv')
 
-header = ['Song_ID', 'Time_Checked', 'Artist', 'Title', 'Views', 'Link', 'Date_Published', 'Lyrics']
+def chunker(seq, size):
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
 
-
-outputPath = 'C:/Users/jeffb/Documents/Python/webPrograms/webScraping/genius/output/genius-songs/'
-fileDate = time.strftime('%Y-%m-%d')
-date = time.time()
-
-results = {}
-
-def getSongInfo ():
-    for page in range(1, 3):
-        rank = (50 * page) - 49 ## (enables 1-100 rank w/ 50 results per page)
-        r = requests.get('https://genius.com/api/songs/chart?page='+str(page)+'&per_page=50&time_period=day')
-        data = json.loads(r.content.decode())
-        for i in range(0, 50): ## (i=0 -> i=49 | corresponds to list positions for items 1,50)
-            link = data['response']['chart_items'][i]['item']['path']
-            song = data['response']['chart_items'][i]['item']['id']
-            views = data['response']['chart_items'][i]['item']['stats']['pageviews']
-            artist = data['response']['chart_items'][i]['item']['primary_artist']['name']       
-            title = data['response']['chart_items'][i]['item']['title']
-
-            results[rank] = [song, date, artist, title, views, link]
-            rank += 1
-
-def getLyrics (i):
-    url = results[i][5]
-    r = requests.get('https://genius.com'+url)
-    soup = BeautifulSoup(r.text, 'html.parser')
-
-    released = soup.find('span', class_='metadata_unit-info metadata_unit-info--text_only')
+def lyric_get(URL):
     try:
-        if any(month in released.text for month in months):
-            results[i].append(released.text)
-        else:
-            results[i].append('N/A')  
-    except:
-        results[i].append('N/A')
+        page = requests.get("https://genius.com" + URL)
+        html = BeautifulSoup(page.text, "html.parser")
 
-    lyrics = soup.find('div', class_='lyrics')
-    
-    for lyric in lyrics('p'):pass
-    if lyric: 
-        results[i].append(lyric.text)
-        
+        lyrics = html.find("div", class_="lyrics").get_text()
+        lyrics_list.append(lyrics.strip('\n'))
 
-    print ('(' + str(i) + ') Grabbing lyrics from ' + url)
+    except AttributeError:
+        lyrics_list.append('N/A')
 
-getSongInfo()
+link_df = pd.read_csv(link_path)
+all_links = link_df['genius-link']
+good_links = link_df.loc[link_df['ratio'] > 0.8, 'genius-link'].tolist()
+genius_id_list = link_df['genius-id']
 
-for i in results:
-    getLyrics(i)
+counter = 0
+chunklength = 50
 
-df = pandas.DataFrame(results).T
-df.columns = header
-df.to_csv(outputPath + fileDate + '-genius-top-100.csv')
+# for chunk in chunker(good_links, chunklength):
+
+lyrics_list = []
+
+for song in good_links:
+    lyric_get(song)
+    counter += 1
+    print(str(counter) + '|' + str(song))
+
+
+output_df = pd.DataFrame(columns=['genius-id', 'lyrics'])
+output_df.to_csv('genius-lyrics.csv', mode='a', index=False)
+
+output_df['genius-id'] = genius_id_list
+output_df['lyrics'] = lyrics_list
+link_df.to_csv('genius-lyrics.csv', mode='a', header=False, index=False)
