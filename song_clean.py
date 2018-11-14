@@ -18,7 +18,7 @@ def bb_unique_songs(df):
     df = df.reset_index()
     df.index.names = ['unique-id']
 
-    df.to_csv('unique-billboard-songs.csv')  # outputs to csv to save for later usage
+    df.to_csv('billboard-files/unique-billboard-songs.csv')  # outputs to csv to save for later usage
     return df
 
 # Replaces censored billboard titles of songs with their respective expletive (to obtain full lyrics from Genius)
@@ -42,7 +42,7 @@ def bb_title_cleaner(song):
     song = song.replace("'", '').replace('...', '').replace('!', '')
 
     # converts censored expletives (csv -> dictionary) to the actual word
-    expletives = pd.read_csv('expletives.csv', index_col='censored').to_dict()['uncensored']
+    expletives = pd.read_csv('helper-files/expletives.csv', index_col='censored').to_dict()['uncensored']
     song = bb_censor_replacer(song, expletives)
 
     # removes whitespace from the text
@@ -79,10 +79,10 @@ def bb_search_cleaner(song, artist):
     clean_artist = bb_artist_cleaner(artist)
 
     search_list.append(clean_artist + ' ' + clean_title)
-    
+
 # Parent function that iteratively cleans each artist-title combo and outputs final result to a csv
 def bb_search_converter():
-    df = pd.read_csv('billboard-songs.csv', encoding='ISO-8859-1', low_memory=False)
+    df = pd.read_csv('billboard-files/billboard-songs.csv', encoding='ISO-8859-1', low_memory=False)
     df_unique = bb_unique_songs(df)
 
     for i in range(len(df_unique)):
@@ -90,7 +90,7 @@ def bb_search_converter():
         print(i)
     df_unique['Search term'] = search_list
 
-    df_unique.to_csv('genius-search-terms.csv')
+    df_unique.to_csv('genius-files/genius-search-terms.csv')
 
 # Cleans links that are returned from the Genius API call
 def genius_link_cleaner(link):
@@ -103,14 +103,14 @@ def genius_link_cleaner(link):
 
 # Parent function that iteratively cleans links returned from Genius API call and outputs result to csv
 def genius_result_converter():
-    genius_df = pd.read_csv('genius-results.csv')
+    genius_df = pd.read_csv('genius-files/genius-results.csv')
 
     for i in range(len(genius_df)):
         genius_link_cleaner(str(genius_df['genius-link'][i]))
         print(i)
     genius_df['Cleaned link'] = clean_links
 
-    genius_df.to_csv('genius-cleaned-links.csv')
+    genius_df.to_csv('genius-files/genius-cleaned-links.csv')
 
 # Creates a ratio of similarity between the search term and the returned link
 def analysis_ratio(song, link):
@@ -119,8 +119,8 @@ def analysis_ratio(song, link):
 
 # Parent function that iteratively creates similarity ratios for genius links and search terms and outputs to csv
 def analysis_str_compare():
-    clean_link_df = pd.read_csv('genius-cleaned-links.csv')
-    search_df = pd.read_csv('csv-files/genius-search-terms.csv')
+    clean_link_df = pd.read_csv('genius-files/genius-cleaned-links.csv')
+    search_df = pd.read_csv('genius-files//genius-search-terms.csv')
 
     analysis_df = pd.merge(search_df, clean_link_df, left_index=True, right_index=True)
     analysis_df.drop(['Unnamed: 0'], axis=1, inplace=True)  # Drops leftover index column from the genius link csv
@@ -132,7 +132,7 @@ def analysis_str_compare():
 
     analysis_df['ratio'] = ratio_list
 
-    analysis_df.to_csv('genius-link-ratio.csv', encoding='ISO-8859-1', index=False)
+    analysis_df.to_csv('genius-files/genius-link-ratio.csv', encoding='ISO-8859-1', index=False)
 
 # Call the required function
 # bb_search_converter()

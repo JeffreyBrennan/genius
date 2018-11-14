@@ -25,13 +25,13 @@ def link_get(query):
         genius_link.append('N/A')
 
 # Grabs search terms from csv and saves as a list
-input_path = r'csv-files\genius-search-terms.csv'
+input_path = r'genius-files\genius-search-terms.csv'
 search_df = pd.read_csv(input_path)
 search_list = search_df['Search term']
 
 # Creates a csv file and writes headers to it
 output_df = pd.DataFrame(columns=['genius-id', 'genius-link'])
-output_df.to_csv('genius-results.csv', mode='a', index=False)
+output_df.to_csv('genius-files/genius-results.csv', mode='a', index=False)
 
 counter = 0
 # Splits task into chunks of size (50), writes to csv after each one to perserve data in event of crash / interruption
@@ -48,4 +48,4 @@ for chunk in chunker(search_list, 50):
     output_df['genius-id'] = song_id
     output_df['genius-link'] = genius_link
 
-    output_df.to_csv('genius-results.csv', mode='a', header=False, index=False)
+    output_df.to_csv('genius-files/genius-results.csv', mode='a', header=False, index=False)
